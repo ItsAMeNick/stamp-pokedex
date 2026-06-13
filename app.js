@@ -216,7 +216,8 @@ window.showSegment = function (segKey) {
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
       <span>${pct}%</span>
     </div>
-    <div class="spread-list">`;
+    <div class="spread-list">
+      ${seg.titlePages ? `<div class="title-page-row">Title page — p.${seg.titlePages}</div>` : ''}`;
 
   let globalIdx = 0;
   for (let i = 0; i < seg.spreads.length; i++) {

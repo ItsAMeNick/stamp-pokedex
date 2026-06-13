@@ -171,6 +171,14 @@ body {
 /* ── Segment view (spread list) ───────────────────────────────── */
 .spread-list { display: flex; flex-direction: column; gap: 10px; }
 
+.title-page-row {
+  font-size: .75rem;
+  color: var(--text-dim);
+  padding: 6px 4px;
+  border-left: 3px solid var(--seg-color, var(--accent));
+  padding-left: 10px;
+}
+
 .spread-row {
   display: flex;
   align-items: center;
