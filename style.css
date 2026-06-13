@@ -429,6 +429,86 @@ body {
   margin-bottom: 8px;
 }
 
+/* ── Pokémon list view ────────────────────────────────────────── */
+.dex-search-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  margin: -16px -12px 0;
+  padding: 16px 12px 10px;
+}
+
+.dex-search {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: .9rem;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.dex-search:focus { border-color: var(--accent); }
+
+.dex-count {
+  font-size: .7rem;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  letter-spacing: .04em;
+}
+
+.dex-list { display: flex; flex-direction: column; gap: 2px; }
+
+.dex-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-radius: 7px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .1s;
+}
+.dex-row:active { opacity: .7; }
+.dex-row.collected { border-left-color: #b89000; background: rgba(192,160,0,.07); }
+.dex-row.stamped   { border-left-color: var(--seg-color, var(--accent)); }
+
+.dex-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid var(--text-dim);
+  background: transparent;
+}
+.dex-row.collected .dex-dot { border-color: #b89000; background: #b89000; }
+.dex-row.stamped   .dex-dot { border-color: var(--seg-color, var(--accent)); background: var(--seg-color, var(--accent)); }
+
+.dex-info { flex: 1; min-width: 0; }
+.dex-name { font-size: .88rem; font-weight: 500; }
+.dex-row.collected .dex-name { color: #e0c840; }
+.dex-meta { font-size: .68rem; color: var(--text-dim); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.dex-slot {
+  font-size: .68rem;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dex-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: .9rem;
+}
+
 /* ── Breadcrumb ───────────────────────────────────────────────── */
 .breadcrumb {
   font-size: .75rem;

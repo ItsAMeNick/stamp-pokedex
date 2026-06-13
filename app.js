@@ -2,7 +2,8 @@
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let DEX = null;
-let VIEW = 'home';         // 'home' | 'segment' | 'spread' | 'settings'
+let ALL_STAMPS = null;     // flat list built after DEX loads
+let VIEW = 'home';         // 'home' | 'segment' | 'spread' | 'settings' | 'list'
 let CUR_SEG = null;        // segment key
 let CUR_SPREAD = 0;        // spread index within segment
 let GRID_COLS = 10;        // configurable, saved to localStorage
@@ -58,6 +59,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  buildAllStamps();
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
@@ -70,6 +73,7 @@ window.goBack = function () {
   if (VIEW === 'spread')   { showSegment(CUR_SEG); return; }
   if (VIEW === 'segment')  { renderHome();          return; }
   if (VIEW === 'settings') { renderHome();          return; }
+  if (VIEW === 'list')     { renderHome();          return; }
   renderHome();
 };
 
@@ -163,7 +167,7 @@ window.confirmReset = function () {
 function renderHome() {
   VIEW = 'home';
   CUR_SEG = null;
-  setTitle('Pokédex Notebook', false, true);
+  setTitle('Pokédex Notebook', false, true, true);
 
   const state = loadState();
 
@@ -396,9 +400,99 @@ window.navSpread = function (delta) {
   document.getElementById('app').scrollTop = 0;
 };
 
+// ── Pokémon list view ─────────────────────────────────────────────────────────
+function buildAllStamps() {
+  ALL_STAMPS = [];
+  for (const seg of DEX.segments) {
+    let segIdx = 0;
+    for (let si = 0; si < seg.spreads.length; si++) {
+      const spread = seg.spreads[si];
+      for (let i = 0; i < spread.stamps.length; i++) {
+        ALL_STAMPS.push({
+          name:        spread.stamps[i],
+          segKey:      seg.key,
+          segDisplay:  seg.display,
+          segColor:    seg.color,
+          spreadIdx:   si,
+          pages:       spread.pages,
+          slotInSpread: i + 1,
+          stampIdx:    segIdx + i,
+        });
+      }
+      segIdx += spread.stamps.length;
+    }
+  }
+}
+
+window.showList = function () {
+  VIEW = 'list';
+  setTitle('All Pokémon', true, false, false);
+
+  document.getElementById('app').innerHTML = `
+    <div class="dex-search-wrap">
+      <input class="dex-search" type="search" placeholder="Search ${ALL_STAMPS.length.toLocaleString()} Pokémon…"
+             oninput="filterDex(this.value)" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div id="dex-count" class="dex-count"></div>
+    <div id="dex-list"  class="dex-list"></div>
+  `;
+  filterDex('');
+};
+
+window.filterDex = function (query) {
+  const q     = (query || '').toLowerCase().trim();
+  const state = loadState();
+  const items = q ? ALL_STAMPS.filter(s => s.name.toLowerCase().includes(q)) : ALL_STAMPS;
+
+  const countEl = document.getElementById('dex-count');
+  const listEl  = document.getElementById('dex-list');
+  if (!listEl) return;
+
+  countEl.textContent = q
+    ? `${items.length.toLocaleString()} of ${ALL_STAMPS.length.toLocaleString()}`
+    : `${ALL_STAMPS.length.toLocaleString()} Pokémon`;
+
+  if (!items.length) {
+    listEl.innerHTML = '<div class="dex-empty">No matches</div>';
+    return;
+  }
+
+  let html = '';
+  for (const item of items) {
+    const st      = getStampState(state, item.segKey, item.stampIdx);
+    const stClass = st === 2 ? ' stamped' : st === 1 ? ' collected' : '';
+    html += `<div class="dex-row${stClass}"
+               style="--seg-color:#${item.segColor}"
+               data-seg="${item.segKey}" data-idx="${item.stampIdx}"
+               onclick="toggleListItem(this)">
+        <div class="dex-dot"></div>
+        <div class="dex-info">
+          <div class="dex-name">${item.name}</div>
+          <div class="dex-meta">${item.segDisplay} · Spread ${item.spreadIdx + 1} · p.${item.pages}</div>
+        </div>
+        <div class="dex-slot">#${item.slotInSpread}</div>
+      </div>`;
+  }
+  listEl.innerHTML = html;
+};
+
+window.toggleListItem = function (el) {
+  const segKey = el.dataset.seg;
+  const idx    = parseInt(el.dataset.idx, 10);
+  const state  = loadState();
+  if (!state[segKey]) state[segKey] = {};
+  const next = (getStampState(state, segKey, idx) + 1) % 3;
+  if (next === 0) delete state[segKey][idx];
+  else            state[segKey][idx] = next;
+  saveState(state);
+  el.classList.toggle('collected', next === 1);
+  el.classList.toggle('stamped',   next === 2);
+};
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function setTitle(title, showBack, showSettings) {
+function setTitle(title, showBack, showSettings, showListBtn = false) {
   document.getElementById('nav-title').textContent = title;
   document.getElementById('back-btn').hidden     = !showBack;
   document.getElementById('settings-btn').hidden = !showSettings;
+  document.getElementById('list-btn').hidden     = !showListBtn;
 }
