@@ -408,6 +408,7 @@ function buildAllStamps() {
     for (let si = 0; si < seg.spreads.length; si++) {
       const spread = seg.spreads[si];
       for (let i = 0; i < spread.stamps.length; i++) {
+        const slot = i + 1;
         ALL_STAMPS.push({
           name:        spread.stamps[i],
           segKey:      seg.key,
@@ -415,7 +416,9 @@ function buildAllStamps() {
           segColor:    seg.color,
           spreadIdx:   si,
           pages:       spread.pages,
-          slotInSpread: i + 1,
+          slotInSpread: slot,
+          row:         Math.ceil(slot / 10),
+          col:         ((slot - 1) % 10) + 1,
           stampIdx:    segIdx + i,
         });
       }
@@ -468,9 +471,8 @@ window.filterDex = function (query) {
         <div class="dex-dot"></div>
         <div class="dex-info">
           <div class="dex-name">${item.name}</div>
-          <div class="dex-meta">${item.segDisplay} · Spread ${item.spreadIdx + 1} · p.${item.pages}</div>
+          <div class="dex-meta">${item.segDisplay} · Spread ${item.spreadIdx + 1} · p.${item.pages} · Row ${item.row}, Col ${item.col}</div>
         </div>
-        <div class="dex-slot">#${item.slotInSpread}</div>
       </div>`;
   }
   listEl.innerHTML = html;
