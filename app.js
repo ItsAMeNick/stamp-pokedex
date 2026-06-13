@@ -16,14 +16,25 @@ function loadConfig() { return JSON.parse(localStorage.getItem(STORAGE_CONFIG) |
 function saveState(s)  { localStorage.setItem(STORAGE_STATE,  JSON.stringify(s)); }
 function saveConfig(c) { localStorage.setItem(STORAGE_CONFIG, JSON.stringify(c)); }
 
-function getStamped(state, segKey, stampIdx) {
-  return !!(state[segKey] && state[segKey][stampIdx]);
+// State values: 0=none, 1=collected (have card), 2=punched (applied to notebook)
+// Migration: old boolean `true` is treated as 2 (punched).
+function getStampState(state, segKey, stampIdx) {
+  const v = state[segKey]?.[stampIdx];
+  if (v === true || v === 2) return 2;
+  if (v === 1) return 1;
+  return 0;
 }
 
-function countStamped(state, segKey) {
+function countPunched(state, segKey) {
   const m = state[segKey];
   if (!m) return 0;
-  return Object.values(m).filter(Boolean).length;
+  return Object.values(m).filter(v => v === true || v === 2).length;
+}
+
+function countCollected(state, segKey) {
+  const m = state[segKey];
+  if (!m) return 0;
+  return Object.values(m).filter(v => v === 1).length;
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -69,14 +80,16 @@ window.showSettings = function () {
   const cols = cfg.cols ?? 10;
   const rows = cfg.rows ?? 6;
 
-  const state  = loadState();
-  const total  = DEX ? DEX.segments.reduce((s, seg) => s + seg.totalStamps, 0) : 0;
-  const done   = DEX ? DEX.segments.reduce((s, seg) => s + countStamped(state, seg.key), 0) : 0;
+  const state     = loadState();
+  const total     = DEX ? DEX.segments.reduce((s, seg) => s + seg.totalStamps, 0) : 0;
+  const done      = DEX ? DEX.segments.reduce((s, seg) => s + countPunched(state, seg.key), 0) : 0;
+  const inHand    = DEX ? DEX.segments.reduce((s, seg) => s + countCollected(state, seg.key), 0) : 0;
 
   document.getElementById('app').innerHTML = `
     <div class="total-strip">
       <div class="total-stat"><span class="val">${done.toLocaleString()}</span><span class="lbl">punched</span></div>
-      <div class="total-stat"><span class="val">${total.toLocaleString()}</span><span class="lbl">total stamps</span></div>
+      <div class="total-stat"><span class="val">${inHand.toLocaleString()}</span><span class="lbl">in hand</span></div>
+      <div class="total-stat"><span class="val">${total.toLocaleString()}</span><span class="lbl">total</span></div>
       <div class="total-stat"><span class="val">${total ? Math.round(100*done/total) : 0}%</span><span class="lbl">complete</span></div>
     </div>
 
@@ -162,14 +175,14 @@ function renderHome() {
 
   let html = '';
   for (const [vol, segs] of Object.entries(byVol)) {
-    const volDone  = segs.reduce((s, seg) => s + countStamped(state, seg.key), 0);
+    const volDone  = segs.reduce((s, seg) => s + countPunched(state, seg.key), 0);
     const volTotal = segs.reduce((s, seg) => s + seg.totalStamps, 0);
     html += `<div class="volume-section">
       <div class="volume-label">Volume ${vol} — ${volDone}/${volTotal}</div>
       <div class="seg-list">`;
 
     for (const seg of segs) {
-      const done = countStamped(state, seg.key);
+      const done = countPunched(state, seg.key);
       const pct  = Math.round(100 * done / seg.totalStamps);
       html += `
         <div class="seg-card" style="--seg-color:#${seg.color}" onclick="showSegment('${seg.key}')">
@@ -191,7 +204,7 @@ window.showSegment = function (segKey) {
   CUR_SEG = segKey;
   const seg   = DEX.segments.find(s => s.key === segKey);
   const state = loadState();
-  const done  = countStamped(state, segKey);
+  const done  = countPunched(state, segKey);
   const pct   = Math.round(100 * done / seg.totalStamps);
 
   setTitle(seg.display, true, true);
@@ -208,7 +221,7 @@ window.showSegment = function (segKey) {
   let globalIdx = 0;
   for (let i = 0; i < seg.spreads.length; i++) {
     const spread  = seg.spreads[i];
-    const sDone   = spread.stamps.filter((_, j) => getStamped(state, segKey, globalIdx + j)).length;
+    const sDone   = spread.stamps.filter((_, j) => getStampState(state, segKey, globalIdx + j) === 2).length;
     const sPct    = Math.round(100 * sDone / spread.stamps.length);
     const dots    = buildThumbDots(state, segKey, spread, globalIdx, seg.color);
 
@@ -230,13 +243,13 @@ window.showSegment = function (segKey) {
 };
 
 function buildThumbDots(state, segKey, spread, startIdx, color) {
-  // Show first 10 stamp slots as colored dots (5×2 mini-grid)
   let html = '';
   const show = 10;
   for (let i = 0; i < show; i++) {
     if (i < spread.stamps.length) {
-      const done = getStamped(state, segKey, startIdx + i);
-      html += `<div class="spread-dot${done ? ' done' : ''}"></div>`;
+      const st = getStampState(state, segKey, startIdx + i);
+      const cls = st === 2 ? ' done' : st === 1 ? ' collected' : '';
+      html += `<div class="spread-dot${cls}"></div>`;
     } else {
       html += `<div class="spread-dot blank"></div>`;
     }
@@ -273,7 +286,8 @@ function renderSpreadGrid(seg, spread, spreadIdx, globalStart, cols, rows, perPa
   const state      = loadState();
   const stamps     = spread.stamps;
   const n          = stamps.length;
-  const sDone      = stamps.filter((_, i) => getStamped(state, seg.key, globalStart + i)).length;
+  const sDone      = stamps.filter((_, i) => getStampState(state, seg.key, globalStart + i) === 2).length;
+  const sCollected = stamps.filter((_, i) => getStampState(state, seg.key, globalStart + i) === 1).length;
   const sPct       = Math.round(100 * sDone / n);
   const isFirst    = spreadIdx === 0;
   const isLast     = spreadIdx === seg.spreads.length - 1;
@@ -286,7 +300,7 @@ function renderSpreadGrid(seg, spread, spreadIdx, globalStart, cols, rows, perPa
 
   let html = `
     <div class="spread-progress" style="--seg-color:#${seg.color}">
-      <span>${sDone}/${n} punched</span>
+      <span>${sDone}/${n} punched${sCollected ? ` · ${sCollected} in hand` : ''}</span>
       <div class="bar-track"><div class="bar-fill" style="width:${sPct}%"></div></div>
       <span>${sPct}%</span>
     </div>
@@ -314,10 +328,11 @@ function renderSpreadGrid(seg, spread, spreadIdx, globalStart, cols, rows, perPa
     }
 
     if (i < stamps.length) {
-      const stampIdx = globalStart + i;
-      const stamped  = getStamped(state, seg.key, stampIdx);
+      const stampIdx  = globalStart + i;
+      const stampState = getStampState(state, seg.key, stampIdx);
+      const stateClass = stampState === 2 ? ' stamped' : stampState === 1 ? ' collected' : '';
       html += `
-        <div class="stamp-cell${stamped ? ' stamped' : ''}"
+        <div class="stamp-cell${stateClass}"
              style="--seg-color:#${seg.color}"
              data-idx="${stampIdx}"
              onclick="toggleCell(this)">
@@ -338,12 +353,14 @@ window.toggleCell = function (el) {
   const state = loadState();
   if (!state[CUR_SEG]) state[CUR_SEG] = {};
 
-  const nowDone = !state[CUR_SEG][idx];
-  if (nowDone) state[CUR_SEG][idx] = true;
-  else         delete state[CUR_SEG][idx];
+  const cur  = getStampState(state, CUR_SEG, idx);
+  const next = (cur + 1) % 3;   // 0→1→2→0
+  if (next === 0) delete state[CUR_SEG][idx];
+  else            state[CUR_SEG][idx] = next;
   saveState(state);
 
-  el.classList.toggle('stamped', nowDone);
+  el.classList.toggle('collected', next === 1);
+  el.classList.toggle('stamped',   next === 2);
 
   // Update progress bar
   const seg    = DEX.segments.find(s => s.key === CUR_SEG);
@@ -351,16 +368,14 @@ window.toggleCell = function (el) {
   let   globalStart = 0;
   for (let i = 0; i < CUR_SPREAD; i++) globalStart += seg.spreads[i].stamps.length;
 
-  const sDone = spread.stamps.filter((_, i) => {
-    const s = state[CUR_SEG];
-    return s && s[globalStart + i];
-  }).length;
-  const sPct = Math.round(100 * sDone / spread.stamps.length);
+  const sDone      = spread.stamps.filter((_, i) => getStampState(state, CUR_SEG, globalStart + i) === 2).length;
+  const sCollected = spread.stamps.filter((_, i) => getStampState(state, CUR_SEG, globalStart + i) === 1).length;
+  const sPct       = Math.round(100 * sDone / spread.stamps.length);
 
   const fill = document.querySelector('.bar-fill');
   const txt  = document.querySelector('.spread-progress span');
   if (fill) fill.style.width = sPct + '%';
-  if (txt)  txt.textContent  = `${sDone}/${spread.stamps.length} punched`;
+  if (txt)  txt.textContent  = `${sDone}/${spread.stamps.length} punched${sCollected ? ` · ${sCollected} in hand` : ''}`;
 };
 
 window.navSpread = function (delta) {

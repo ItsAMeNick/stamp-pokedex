@@ -198,8 +198,9 @@ body {
   border-radius: 2px;
   background: var(--surface2);
 }
-.spread-dot.done { background: var(--seg-color, var(--accent)); }
-.spread-dot.blank { background: var(--border); opacity: .4; }
+.spread-dot.done      { background: var(--seg-color, var(--accent)); }
+.spread-dot.collected { background: #b89000; opacity: .8; }
+.spread-dot.blank     { background: var(--border); opacity: .4; }
 
 .spread-info { flex: 1; min-width: 0; }
 .spread-title { font-weight: 600; font-size: .9rem; }
@@ -272,6 +273,13 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .stamp-cell:active { opacity: .75; }
+
+.stamp-cell.collected {
+  background: rgba(192, 160, 0, 0.15);
+  border-color: #b89000;
+}
+.stamp-cell.collected .stamp-num  { color: #c0a030; }
+.stamp-cell.collected .stamp-name { color: #e0c840; }
 
 .stamp-cell.stamped {
   background: var(--seg-color, var(--accent));

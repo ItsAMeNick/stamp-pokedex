@@ -1,4 +1,4 @@
-const CACHE = 'pdex-v2';
+const CACHE = 'pdex-v3';
 const ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json', './data/dex.json'];
 
 self.addEventListener('install', e => {
