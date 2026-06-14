@@ -740,8 +740,8 @@
       "display": "Sinnoh",
       "volume": 1,
       "color": "7E57C2",
-      "label": "Platinum, 210",
-      "totalStamps": 222,
+      "label": "Platinum, 211",
+      "totalStamps": 224,
       "spreads": [
         {
           "stamps": [
@@ -984,9 +984,11 @@
             "Froslass",
             "Absol",
             "Giratina (Altered)",
-            "Giratina (Origin)"
+            "Giratina (Origin)",
+            "Shaymin (Land)",
+            "Shaymin (Sky)"
           ],
-          "blanks": 11,
+          "blanks": 9,
           "pages": "80–81"
         }
       ],
