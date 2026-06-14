@@ -741,7 +741,7 @@
       "volume": 1,
       "color": "7E57C2",
       "label": "Platinum, 211",
-      "totalStamps": 224,
+      "totalStamps": 222,
       "spreads": [
         {
           "stamps": [
@@ -910,9 +910,7 @@
             "Mesprit",
             "Azelf",
             "Dialga",
-            "Dialga (Origin)",
             "Palkia",
-            "Palkia (Origin)",
             "Manaphy",
             "Rotom",
             "Rotom (Heat)",
@@ -931,7 +929,7 @@
             "Lickitung",
             "Lickilicky"
           ],
-          "blanks": 5,
+          "blanks": 7,
           "pages": "76–77"
         },
         {
