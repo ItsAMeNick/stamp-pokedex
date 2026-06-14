@@ -1,8 +1,12 @@
-const CACHE = 'pdex-v5';
+const CACHE = 'pdex-v7';
 const ASSETS = ['./', './index.html', './app.js', './style.css', './manifest.json', './data/dex.json'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  e.waitUntil(caches.open(CACHE).then(c =>
+    Promise.all(ASSETS.map(url =>
+      fetch(url, { cache: 'no-store' }).then(r => c.put(url, r))
+    ))
+  ));
   self.skipWaiting();
 });
 

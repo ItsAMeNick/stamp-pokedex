@@ -132,6 +132,13 @@ window.showSettings = function () {
         </div>
         <button class="icon-btn" onclick="exportState()">↓</button>
       </div>
+      <div class="settings-row">
+        <div>
+          <div class="setting-label">Import progress</div>
+          <div class="setting-hint">Restore from a JSON backup</div>
+        </div>
+        <button class="icon-btn" onclick="importState()">↑</button>
+      </div>
     </div>
 
     <button class="danger-btn" onclick="confirmReset()">Reset all progress…</button>
@@ -154,6 +161,30 @@ window.exportState = function () {
   a.href = 'data:application/json,' + encodeURIComponent(data);
   a.download = 'pokedex-progress.json';
   a.click();
+};
+
+window.importState = function () {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!parsed.state || typeof parsed.state !== 'object') throw new Error('Invalid format');
+        saveState(parsed.state);
+        showSettings();
+        alert('Import successful.');
+      } catch {
+        alert('Could not read file — make sure it\'s a valid export JSON.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 };
 
 window.confirmReset = function () {
