@@ -1729,7 +1729,7 @@
       "volume": 1,
       "color": "EF5350",
       "label": "X/Y Mountain, 151",
-      "totalStamps": 164,
+      "totalStamps": 168,
       "spreads": [
         {
           "stamps": [
@@ -1908,9 +1908,13 @@
             "Zygarde (50%)",
             "Zygarde (10%)",
             "Zygarde (Complete)",
-            "Mewtwo"
+            "Mewtwo",
+            "Diancie",
+            "Hoopa (Confined)",
+            "Hoopa (Unbound)",
+            "Volcanion"
           ],
-          "blanks": 15,
+          "blanks": 11,
           "pages": "156–157"
         }
       ],
