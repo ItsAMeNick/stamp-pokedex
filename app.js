@@ -497,8 +497,8 @@ window.filterDex = function (query) {
     const stClass = st === 2 ? ' stamped' : st === 1 ? ' collected' : '';
     html += `<div class="dex-row${stClass}"
                style="--seg-color:#${item.segColor}"
-               data-seg="${item.segKey}" data-idx="${item.stampIdx}"
-               onclick="toggleListItem(this)">
+               data-seg="${item.segKey}" data-idx="${item.stampIdx}" data-spread="${item.spreadIdx}"
+               onclick="openFromList(this)">
         <div class="dex-dot"></div>
         <div class="dex-info">
           <div class="dex-name">${item.name}</div>
@@ -509,17 +509,24 @@ window.filterDex = function (query) {
   listEl.innerHTML = html;
 };
 
-window.toggleListItem = function (el) {
-  const segKey = el.dataset.seg;
-  const idx    = parseInt(el.dataset.idx, 10);
-  const state  = loadState();
-  if (!state[segKey]) state[segKey] = {};
-  const next = (getStampState(state, segKey, idx) + 1) % 3;
-  if (next === 0) delete state[segKey][idx];
-  else            state[segKey][idx] = next;
-  saveState(state);
-  el.classList.toggle('collected', next === 1);
-  el.classList.toggle('stamped',   next === 2);
+window.openFromList = function (el) {
+  const segKey    = el.dataset.seg;
+  const idx       = parseInt(el.dataset.idx, 10);
+  const spreadIdx = parseInt(el.dataset.spread, 10);
+  const state     = loadState();
+
+  if (getStampState(state, segKey, idx) === 0) {
+    if (!state[segKey]) state[segKey] = {};
+    state[segKey][idx] = 1;
+    saveState(state);
+  }
+
+  showSpread(segKey, spreadIdx);
+
+  requestAnimationFrame(() => {
+    const cell = document.querySelector(`.stamp-cell[data-idx="${idx}"]`);
+    if (cell) cell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
