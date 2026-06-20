@@ -1925,8 +1925,8 @@
       "display": "Alola",
       "volume": 2,
       "color": "FF7043",
-      "label": "Ultra Sun/Ultra Moon combined, 403",
-      "totalStamps": 417,
+      "label": "Ultra Sun/Ultra Moon combined, 405",
+      "totalStamps": 419,
       "spreads": [
         {
           "stamps": [
@@ -2382,9 +2382,11 @@
             "Necrozma (Ultra)",
             "Magearna",
             "Marshadow",
-            "Zeraora"
+            "Zeraora",
+            "Meltan",
+            "Melmetal"
           ],
-          "blanks": 2,
+          "blanks": 0,
           "pages": "32–33"
         }
       ],
